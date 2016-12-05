@@ -1,0 +1,12 @@
+[package]
+name = "db"
+version = "0.1.0"
+authors = ["Jesse Morgan <jesse@jesterpm.net>"]
+
+description = "Rust bindings for Berkeley DB 4.8"
+repository = "https://github.com/jesterpm/libdb-rs"
+
+[dependencies]
+libc = "0.2.0"
+bitflags = "0.7.0"
+tempdir = "0.3"
