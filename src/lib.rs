@@ -2,28 +2,28 @@
 //!
 //! # Examples
 //! ```
-//! let env = db::EnvironmentBuilder::new()
-//!     .flags(db::DB_CREATE | db::DB_RECOVER | db::DB_INIT_TXN | db::DB_INIT_MPOOL)
+//! let env = libdb::EnvironmentBuilder::new()
+//!     .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_TXN | libdb::DB_INIT_MPOOL)
 //!     .open()
 //!     .unwrap();
 //!
-//! let txn = env.txn(None, db::DB_NONE).unwrap();
+//! let txn = env.txn(None, libdb::DB_NONE).unwrap();
 //!
-//! let db = db::DatabaseBuilder::new()
+//! let db = libdb::DatabaseBuilder::new()
 //!     .environment(&env)
 //!     .transaction(&txn)
-//!     .db_type(db::DbType::BTree)
-//!     .flags(db::DB_CREATE)
+//!     .db_type(libdb::DbType::BTree)
+//!     .flags(libdb::DB_CREATE)
 //!     .open()
 //!     .unwrap();
 //!
-//! txn.commit(db::CommitType::Inherit).expect("Commit failed!");
+//! txn.commit(libdb::CommitType::Inherit).expect("Commit failed!");
 //!
 //! let mut key   = String::from("key").into_bytes();
 //! let mut value = String::from("value").into_bytes();
-//! assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).is_ok());
+//! assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).is_ok());
 //!
-//! let ret = db.get(None, key.as_mut_slice(), db::DB_NONE);
+//! let ret = db.get(None, key.as_mut_slice(), libdb::DB_NONE);
 //! assert!(ret.is_ok());
 //! assert_eq!(value, ret.ok().unwrap().unwrap());
 //! ```
@@ -125,8 +125,8 @@ impl Drop for EnvironmentBuilder {
 ///
 /// # Examples
 /// ```
-/// let ret = db::EnvironmentBuilder::new()
-///     .flags(db::DB_CREATE | db::DB_RECOVER | db::DB_INIT_LOG | db::DB_INIT_TXN)
+/// let ret = libdb::EnvironmentBuilder::new()
+///     .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_LOG | libdb::DB_INIT_TXN)
 ///     .open();
 /// assert!(ret.is_ok());
 /// ```
@@ -337,9 +337,9 @@ impl<'a, 'b> DatabaseBuilder<'a, 'b> {
 ///
 /// # Examples
 /// ```
-/// let ret = db::DatabaseBuilder::new()
-///     .db_type(db::DbType::BTree)
-///     .flags(db::DB_CREATE)
+/// let ret = libdb::DatabaseBuilder::new()
+///     .db_type(libdb::DbType::BTree)
+///     .flags(libdb::DB_CREATE)
 ///     .open();
 /// assert!(ret.is_ok())
 /// ```
@@ -356,31 +356,31 @@ impl<'a> Database<'a> {
     ///
     /// # Record Found
     /// ```
-    /// # let db = db::DatabaseBuilder::new()
-    /// #    .db_type(db::DbType::BTree)
-    /// #    .flags(db::DB_CREATE)
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .db_type(libdb::DbType::BTree)
+    /// #    .flags(libdb::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key be mutable.
     /// let mut key   = String::from("key").into_bytes();
     /// let mut value = String::from("value").into_bytes();
-    /// assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).is_ok());
+    /// assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).is_ok());
     ///
-    /// let ret = db.get(None, key.as_mut_slice(), db::DB_NONE);
+    /// let ret = db.get(None, key.as_mut_slice(), libdb::DB_NONE);
     /// assert!(ret.is_ok());
     /// assert_eq!(value, ret.ok().unwrap().unwrap());
     /// ```
     ///
     /// ## Record Not Found
     /// ```
-    /// # let db = db::DatabaseBuilder::new()
-    /// #    .db_type(db::DbType::BTree)
-    /// #    .flags(db::DB_CREATE)
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .db_type(libdb::DbType::BTree)
+    /// #    .flags(libdb::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key be mutable.
     /// let mut key = String::from("key2").into_bytes();
-    /// let ret = db.get(None, key.as_mut_slice(), db::DB_NONE);
+    /// let ret = db.get(None, key.as_mut_slice(), libdb::DB_NONE);
     /// println!("{:?}", ret);
     /// assert!(ret.is_ok());
     /// assert!(ret.unwrap().is_none());
@@ -413,15 +413,15 @@ impl<'a> Database<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let db = db::DatabaseBuilder::new()
-    /// #    .db_type(db::DbType::BTree)
-    /// #    .flags(db::DB_CREATE)
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .db_type(libdb::DbType::BTree)
+    /// #    .flags(libdb::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key and value be mutable.
     /// let mut key   = String::from("key").into_bytes();
     /// let mut value = String::from("value").into_bytes();
-    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE);
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE);
     /// assert!(ret.is_ok());
     /// ```
     pub fn put(&self, txn: Option<&Transaction>, key: &mut [u8], data: &mut [u8], flags: Flags) -> Result<(), Error> {

@@ -1,4 +1,4 @@
-extern crate db;
+extern crate libdb;
 extern crate tempdir;
 
 use std::path::Path;
@@ -13,7 +13,7 @@ fn open_close_open_test() {
         let db        = open_test_db(&env);    
         let mut key   = String::from("key").into_bytes();
         let mut value = String::from("value").into_bytes();
-        assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).is_ok());
+        assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).is_ok());
     }
     
     {
@@ -37,8 +37,8 @@ fn test_transaction() {
 
     // Test explicit abort
     {
-        let txn = env.txn(None, db::DB_NONE).unwrap();
-        let ret = db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE);
+        let txn = env.txn(None, libdb::DB_NONE).unwrap();
+        let ret = db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE);
         print!("{:?}", ret);
         assert!(ret.is_ok());
         assert!(txn.abort().is_ok());
@@ -49,8 +49,8 @@ fn test_transaction() {
 
     // Test abort when out of scope
     {
-        let txn = env.txn(None, db::DB_NONE).unwrap();
-        db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).expect("Failed to put");
+        let txn = env.txn(None, libdb::DB_NONE).unwrap();
+        db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).expect("Failed to put");
     }
 
     // Should have no record.
@@ -58,9 +58,9 @@ fn test_transaction() {
 
     // Test commit
     {
-        let txn = env.txn(None, db::DB_NONE).unwrap();
-        db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).expect("Failed to put");
-        txn.commit(db::CommitType::Inherit).expect("Failed to commit");
+        let txn = env.txn(None, libdb::DB_NONE).unwrap();
+        db.put(Some(&txn), key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).expect("Failed to put");
+        txn.commit(libdb::CommitType::Inherit).expect("Failed to commit");
     }
 
     // Should have no record.
@@ -68,27 +68,27 @@ fn test_transaction() {
 }
 
 /// Helper to open a BDB environment for the test.
-fn open_test_env(dir: &Path) -> db::Environment {
-    db::EnvironmentBuilder::new()
+fn open_test_env(dir: &Path) -> libdb::Environment {
+    libdb::EnvironmentBuilder::new()
         .home(dir)
-        .flags(db::DB_CREATE | db::DB_RECOVER | db::DB_INIT_LOG | db::DB_INIT_TXN | db::DB_INIT_MPOOL)
+        .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_LOG | libdb::DB_INIT_TXN | libdb::DB_INIT_MPOOL)
         .open()
         .expect("Failed to open DB")
 }
 
 /// Helper to open a BDB DB for the test.
-fn open_test_db(env: &db::Environment) -> db::Database {
-    let txn = env.txn(None, db::DB_NONE).unwrap();
-    let ret = db::DatabaseBuilder::new()
+fn open_test_db(env: &libdb::Environment) -> libdb::Database {
+    let txn = env.txn(None, libdb::DB_NONE).unwrap();
+    let ret = libdb::DatabaseBuilder::new()
         .environment(env)
         .transaction(&txn)
         .file("db")
-        .db_type(db::DbType::BTree)
-        .flags(db::DB_CREATE)
+        .db_type(libdb::DbType::BTree)
+        .flags(libdb::DB_CREATE)
         .open();
     match ret {
         Ok(db) => {
-            txn.commit(db::CommitType::Inherit).expect("Commit failed");
+            txn.commit(libdb::CommitType::Inherit).expect("Commit failed");
             db
         },
         Err(e) => { panic!("Error: {:?}", e) }
@@ -96,13 +96,13 @@ fn open_test_db(env: &db::Environment) -> db::Database {
 }
 
 /// Helper to assert a record is missing in the database.
-fn assert_norecord(db: &db::Database, key: &mut [u8]) {
-    assert!(db.get(None, key, db::DB_NONE).unwrap().is_none());
+fn assert_norecord(db: &libdb::Database, key: &mut [u8]) {
+    assert!(db.get(None, key, libdb::DB_NONE).unwrap().is_none());
 }
 
 /// Helper to assert a record has a specific value in the database.
-fn assert_record_eq(db: &db::Database, key: &mut [u8], expected :&str) {
-    match db.get(None, key, db::DB_NONE) {
+fn assert_record_eq(db: &libdb::Database, key: &mut [u8], expected :&str) {
+    match db.get(None, key, libdb::DB_NONE) {
         Ok(Some(value)) => assert_eq!(expected, String::from_utf8(value).unwrap()),
         _               => assert!(false)
     }

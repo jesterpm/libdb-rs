@@ -8,28 +8,30 @@ Rust bindings for Berkeley DB 4.8.
 ## Example
 
 ```rust
-let env = db::EnvironmentBuilder::new()
-    .flags(db::DB_CREATE | db::DB_RECOVER | db::DB_INIT_TXN | db::DB_INIT_MPOOL)
+extern crate libdb;
+
+let env = libdb::EnvironmentBuilder::new()
+    .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_TXN | libdb::DB_INIT_MPOOL)
     .open()
     .unwrap();
 
-let txn = env.txn(None, db::DB_NONE).unwrap();
+let txn = env.txn(None, libdb::DB_NONE).unwrap();
 
-let db = db::DatabaseBuilder::new()
+let db = libdb::DatabaseBuilder::new()
     .environment(&env)
     .transaction(&txn)
-    .db_type(db::DbType::BTree)
-    .flags(db::DB_CREATE)
+    .db_type(libdb::DbType::BTree)
+    .flags(libdb::DB_CREATE)
     .open()
     .unwrap();
 
-txn.commit(db::CommitType::Inherit).expect("Commit failed!");
+txn.commit(libdb::CommitType::Inherit).expect("Commit failed!");
 
 let mut key   = String::from("key").into_bytes();
 let mut value = String::from("value").into_bytes();
-db.put(None, key.as_mut_slice(), value.as_mut_slice(), db::DB_NONE).expect("Put failed!");
+db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).expect("Put failed!");
 
-let result = db.get(None, key.as_mut_slice(), db::DB_NONE).unwrap();
+let result = db.get(None, key.as_mut_slice(), libdb::DB_NONE).unwrap();
 println!("{:?}", result);
 ```
 
