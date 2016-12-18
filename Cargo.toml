@@ -10,3 +10,4 @@ repository = "https://github.com/jesterpm/libdb-rs"
 libc = "0.2.0"
 bitflags = "0.7.0"
 tempdir = "0.3"
+libdb-sys = { git = "https://github.com/jesterpm/libdb-sys" }

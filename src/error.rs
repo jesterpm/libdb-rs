@@ -2,7 +2,7 @@
 
 use std::ffi::CStr;
 use std::fmt;
-use db_ffi;
+use libdb_sys::ffi;
 
 /// An error returned from a BDB library call.
 #[derive(Debug)]
@@ -24,7 +24,7 @@ impl Error {
     /// Return a `String` describing the error.
     pub fn as_string(&self) -> String {
         unsafe {
-            CStr::from_ptr(db_ffi::db_strerror(self.errno)).to_string_lossy().into_owned()
+            CStr::from_ptr(ffi::db_strerror(self.errno)).to_string_lossy().into_owned()
         }
     }
 }

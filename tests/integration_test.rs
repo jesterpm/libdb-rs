@@ -1,6 +1,7 @@
 extern crate libdb;
 extern crate tempdir;
 
+use std::str;
 use std::path::Path;
 use tempdir::TempDir;
 
@@ -9,16 +10,14 @@ fn open_close_open_test() {
     let dbdir     = TempDir::new("libdb-rs").expect("Expected temp dir");
 
     {
-        let env       = open_test_env(dbdir.path());
-        let db        = open_test_db(&env);    
+        let (env, db) = open_test_db(dbdir.path());
         let mut key   = String::from("key").into_bytes();
         let mut value = String::from("value").into_bytes();
         assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).is_ok());
     }
     
     {
-        let env     = open_test_env(dbdir.path());
-        let db      = open_test_db(&env);   
+        let (env, db) = open_test_db(dbdir.path());
         let mut key = String::from("key").into_bytes();
         assert_record_eq(&db, key.as_mut_slice(), "value");
     }
@@ -27,10 +26,7 @@ fn open_close_open_test() {
 #[test]
 fn test_transaction() {
     let dbdir     = TempDir::new("libdb-rs").expect("Expected temp dir");
-    println!("Before creating the environment");
-    let env       = open_test_env(dbdir.path());
-    println!("After creating the environment");
-    let db        = open_test_db(&env);    
+    let (env, db) = open_test_db(dbdir.path());
 
     let mut key   = String::from("key").into_bytes();
     let mut value = String::from("value").into_bytes();
@@ -68,31 +64,27 @@ fn test_transaction() {
 }
 
 /// Helper to open a BDB environment for the test.
-fn open_test_env(dir: &Path) -> libdb::Environment {
-    libdb::EnvironmentBuilder::new()
+fn open_test_db(dir: &Path) -> (libdb::Environment, libdb::Database) {
+    let env = libdb::EnvironmentBuilder::new()
         .home(dir)
         .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_LOG | libdb::DB_INIT_TXN | libdb::DB_INIT_MPOOL)
         .open()
-        .expect("Failed to open DB")
-}
+        .expect("Failed to open DB");
 
-/// Helper to open a BDB DB for the test.
-fn open_test_db(env: &libdb::Environment) -> libdb::Database {
     let txn = env.txn(None, libdb::DB_NONE).unwrap();
     let ret = libdb::DatabaseBuilder::new()
-        .environment(env)
         .transaction(&txn)
+        .environment(&env)
         .file("db")
-        .db_type(libdb::DbType::BTree)
         .flags(libdb::DB_CREATE)
         .open();
-    match ret {
-        Ok(db) => {
-            txn.commit(libdb::CommitType::Inherit).expect("Commit failed");
-            db
-        },
+
+    match ret.as_ref() {
+        Ok(db) => txn.commit(libdb::CommitType::Inherit).expect("Commit failed"),
         Err(e) => { panic!("Error: {:?}", e) }
     }
+
+    (env, ret.unwrap())
 }
 
 /// Helper to assert a record is missing in the database.
@@ -103,7 +95,7 @@ fn assert_norecord(db: &libdb::Database, key: &mut [u8]) {
 /// Helper to assert a record has a specific value in the database.
 fn assert_record_eq(db: &libdb::Database, key: &mut [u8], expected :&str) {
     match db.get(None, key, libdb::DB_NONE) {
-        Ok(Some(value)) => assert_eq!(expected, String::from_utf8(value).unwrap()),
+        Ok(Some(value)) => assert_eq!(expected, str::from_utf8(value.as_slice()).unwrap()),
         _               => assert!(false)
     }
 }
