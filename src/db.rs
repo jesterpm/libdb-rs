@@ -361,6 +361,75 @@ impl Db {
             }
         }
     }
+
+    /// Get a cursor on the database.
+    ///
+    /// # Examples
+    /// ```
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .flags(libdb::DB_CREATE)
+    /// #    .open()
+    /// #    .unwrap();
+    /// // Note: BDB requires that the key and value be mutable.
+    /// let mut key   = String::from("key").into_bytes();
+    /// let mut value = String::from("value").into_bytes();
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE);
+    /// assert!(ret.is_ok());
+    ///
+    /// // get cursor and iterate
+    /// let mut cursor = db.cursor().expect("Failed to get cursor");
+    /// ```
+    pub fn cursor(&self) -> Result<Cursor, Error> {
+        let mut dbc: db_ffi::DBC = db_ffi::DBC::default();
+        let mut dbc_ptr: *mut db_ffi::DBC = &mut dbc as *mut db_ffi::DBC;
+        unsafe {
+            match ((*self.db).cursor.unwrap())(self.db, ptr::null_mut(), &mut dbc_ptr as *mut *mut db_ffi::DBC, 0) {
+                0 => Ok(Cursor{dbc_ptr}),
+                e => Err(Error::new(e)),
+            }
+        }
+    }
+}
+
+pub struct Cursor {
+    dbc_ptr: *mut db_ffi::DBC,
+}
+
+impl Cursor {
+    /// Iterate over key/data pairs in the database.
+    ///
+    /// # Examples
+    /// ```
+    /// # use std::str;
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .flags(libdb::DB_CREATE)
+    /// #    .open()
+    /// #    .unwrap();
+    /// // Note: BDB requires that the key and value be mutable.
+    /// let mut key   = String::from("key").into_bytes();
+    /// let mut value = String::from("value").into_bytes();
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE);
+    /// assert!(ret.is_ok());
+    ///
+    /// // get cursor and iterate
+    /// let mut cursor = db.cursor().expect("Failed to get cursor");
+    /// let (key_dbt, data_dbt) = cursor.next().expect("Could not walk cursor");
+    ///     assert_eq!("key", str::from_utf8(key_dbt.unwrap().as_slice()).unwrap());
+    ///     assert_eq!("value", str::from_utf8(data_dbt.unwrap().as_slice()).unwrap());
+    /// ```
+    pub fn next(&mut self) -> Result<(Option<DBT>, Option<DBT>), Error> {
+        let mut key_dbt: db_ffi::DBT = Default::default();
+        key_dbt.flags = db_ffi::DB_DBT_MALLOC;
+
+        let mut data_dbt: db_ffi::DBT = Default::default();
+        data_dbt.flags = db_ffi::DB_DBT_MALLOC;
+        unsafe {
+            match ((*self.dbc_ptr).c_get.unwrap())(self.dbc_ptr, &mut key_dbt, &mut data_dbt, db_ffi::DB_NEXT) {
+                0 => Ok((Some(DBT::from(key_dbt)), Some(DBT::from(data_dbt)))),
+                e => Err(Error::new(e)),
+            }
+        }
+    }
 }
 
 impl Drop for Db {

@@ -59,8 +59,44 @@ fn test_transaction() {
         txn.commit(libdb::CommitType::Inherit).expect("Failed to commit");
     }
 
-    // Should have no record.
+    // Should have record
     assert_record_eq(&db, key.as_mut_slice(), "value");
+}
+
+#[test]
+fn test_cursor() {
+    let dbdir     = TempDir::new("libdb-rs").expect("Expected temp dir");
+    let (env, db) = open_test_db(dbdir.path());
+
+    let mut key_a   = String::from("testkeyA").into_bytes();
+    let mut value_a = String::from("testvalueA").into_bytes();
+    let mut key_b   = String::from("testkeyB").into_bytes();
+    let mut value_b = String::from("testvalueB").into_bytes();
+
+    // commit test values
+    {
+        let txn = env.txn(None, libdb::DB_NONE).unwrap();
+        db.put(Some(&txn), key_a.as_mut_slice(), value_a.as_mut_slice(), libdb::DB_NONE).expect("Failed to put");
+        txn.commit(libdb::CommitType::Inherit).expect("Failed to commit");
+    }
+    {
+        let txn = env.txn(None, libdb::DB_NONE).unwrap();
+        db.put(Some(&txn), key_b.as_mut_slice(), value_b.as_mut_slice(), libdb::DB_NONE).expect("Failed to put");
+        txn.commit(libdb::CommitType::Inherit).expect("Failed to commit");
+    }
+
+    // get cursor and iterate
+    let mut cursor = db.cursor().expect("Failed to get cursor");
+    {
+        let (key_dbt, data_dbt) = cursor.next().expect("Could not walk cursor");
+        assert_eq!("testkeyA", str::from_utf8(key_dbt.unwrap().as_slice()).unwrap());
+        assert_eq!("testvalueA", str::from_utf8(data_dbt.unwrap().as_slice()).unwrap());
+    }
+    {
+        let (key_dbt, data_dbt) = cursor.next().expect("Could not walk cursor");
+        assert_eq!("testkeyB", str::from_utf8(key_dbt.unwrap().as_slice()).unwrap());
+        assert_eq!("testvalueB", str::from_utf8(data_dbt.unwrap().as_slice()).unwrap());
+    }
 }
 
 /// Helper to open a BDB environment for the test.

@@ -1,6 +1,6 @@
 [package]
 name = "libdb"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jesse Morgan <jesse@jesterpm.net>"]
 
 description = "Rust bindings for Berkeley DB 4.8"
