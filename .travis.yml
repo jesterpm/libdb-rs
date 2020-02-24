@@ -1,4 +1,9 @@
 language: rust
+script:
+  - cargo test --no-default-features --features v5_3
+  - rm __db*
+  - rm log.*
+  - cargo test --no-default-features --features v4_8
 rust:
   - stable
   - beta

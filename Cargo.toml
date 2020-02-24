@@ -3,11 +3,15 @@ name = "libdb"
 version = "0.2.0"
 authors = ["Jesse Morgan <jesse@jesterpm.net>"]
 
-description = "Rust bindings for Berkeley DB 4.8"
+description = "Rust bindings for Berkeley DB"
 repository = "https://github.com/jesterpm/libdb-rs"
 
+[features]
+v5_3 = ["libdb-sys/v5_3"]
+v4_8 = ["libdb-sys/v4_8"]
+
 [dependencies]
-libc = "0.2.0"
-bitflags = "0.7.0"
+libc = "0.2.67"
+bitflags = "1.2.1"
 tempdir = "0.3"
-libdb-sys = { git = "https://github.com/jesterpm/libdb-sys" }
+libdb-sys = { git = "https://github.com/fishi0x01/libdb-sys", branch = "fishi0x01/db-5.3.21"}
